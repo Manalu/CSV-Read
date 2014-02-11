@@ -27,116 +27,141 @@ if (isset($_POST['submit']))
 
 //$myarray = read1("upload/temp.csv");
 $myarray = readcsv("upload/temp.csv");
-//echo implode("|", $myarray);
+$january= read_array($myarray,2,3);
+$material = read_array($myarray,2,2);
+$sector = read_array($myarray,2,0);
 
+for ($i=0; $i < 12 ; $i++) 
+{ 
+	$month[$i] = read_array($myarray,2,3+$i);
+}
+echo $month[0];
+//echo implode(",", $january);
+//echo $sector[0];
+//echo searchword($myarray,$findthis);
+//echo implode("|", $myarray);
+$temp .= "<table class='CSSTableGenerator'>";
+for ($i=0; $i < count($january); $i++) 
+{
+	$data[0] = $sector[$i];
+	$data[1] = $material[$i];
+	//$data[2] = $january[$i];
+	
+	for ($x=0; $x <= count($month); $x++) 
+	{ 
+		$data[$x+2]=$month[$x][$i];
+	}
+	
+	//if($data1!="SUBTOTAL")
+	{
+	$temp .=  "<tr>";
+	foreach ($data as $value) 
+	{
+		$temp .=  "<td>$value</td>";
+	}
+	//$temp .=  "<td>$data3</td><td>$data1</td><td>$data2</td>";
+	$temp .=  "</tr>";
+	}
+}
+$temp .=  "</table>";
+echo $temp;
 
 //header('Location: index.php');
 
-function filename($myarray,$text2find,$title,$x1,$x2)
-{
-	$find_position = strpos($myarray[0][0], $text2find);
-	$filedate = substr($myarray[0][0], $find_position+$x1,10);
-	$filedate_to = substr($myarray[0][0], $find_position+$x2,10);
-	$filedate =date(str_replace('.','-',$filedate));
-	$filename = "$title".$filedate;
-	
-	$filename_array[0]=$filedate;
-	$filename_array[1]=$filedate_to;
-	$filename_array[2]=$filename;
-	return $filename_array;
-}
-
-
-function read1($filename)
-{
-	$row = 0;
-	$counter = 0;
-	
-	$file_handle = fopen($filename, "r");
-	while (!feof($file_handle)) 
-	{
-		$counter = 0;
-	   	$data[$row] = fgetcsv($file_handle);
-	   
-		$splitcontents = explode(",", $data[$row]);
-		echo "<br>";
-		foreach($splitcontents as $mydata)
-		{
-			echo " | " .$mydata. " | ";
-			$fullarray[$row][$counter]=$mydata;
-			$counter++;
-		}
-	   $row++;
-	   echo "<br>";
-	}
-	fclose($file_handle);
-	return $fullarray;
-}
-
-function readcsv2($filename)
-{
-	$file = fopen($filename,"r");
-	while(! feof($file))
-  {
-  print_r(fgetcsv($file));
-  }
-
-fclose($file);
-}
 
 function readcsv($filename)
 {
-	$row = 1;
+	$row = 0;
+	$temp = "";
 	if (($handle = fopen($filename, "r")) !== FALSE) 
 	{
-		echo "<table class='CSSTableGenerator'>";
+		$temp .= "<table class='CSSTableGenerator'>";
 	    while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) 
 	    {
-	    	echo "<tr>";
+	    	$temp .=  "<tr>";
 	        $num = count($data);
 	        //echo "<p> $num fields in line $row: <br /></p>\n";
-	        $row++;
+	        //$row++;
 	        for ($c=0; $c < $num; $c++) 
 	        {
-	            echo "<td>($row,$c)" .$data[$c] ."</td>";// . "<br />\n";
+	        	//$fullarray[$row][$c] = $data[$c];
+				$fullarray[$row][$c]["col"] = $data[$c];
+				$fullarray[$row][$c]["pos"] = "$row,$c";
+	            $temp .=  "<td>($row,$c)" .$data[$c] ."</td>";// . "<br />\n";
 	        }
-			echo "</tr>";
+			$row++;
+			$temp .=  "</tr>";
 	    }
 	    fclose($handle);
-		echo "</table>";
+		$temp .=  "</table>";
 	}
+	//echo $temp;
+	//echo $fullarray[3][1]["pos"];
+	return $fullarray;
 }
 
-function display($fullarray,$param,$arrayselected)
+function read_array($fullarray,$row,$col)
 {
-	$count = 0;$x=0;$y=0;
-	foreach ($fullarray as $type) 
+	$r = $row;
+	if(!$row) $r=0;
+	if(!$col) $c=0;
+	
+	$temp = "";
+	
+	$temp .= "<table class='CSSTableGenerator'>";
+	foreach ($fullarray as $row) 
 	{
-		$y=0;
-	    $count= 10;//count($type);
-	    
-		foreach ($type as $dd)
+		//$c=0;
+		$c = $col;
+		$temp .=  "<tr>";
+		//foreach ($row as $col) 
 		{
-			$data = trim($fullarray[$x][$y]);
-			$strlen = strlen($data);
+			//$content = strtoupper($fullarray[$r][$c]["col"]);
+			$content= strtoupper($fullarray[$r][$c]["col"]);
+			$content = str_replace(array(" ", " "), "", $content);
+			$content_array[] = $content;
 			
-			if(substr($data,-5)==$param)
-			{
-				$temp1 = $temp1 + str_replace(',', '', $fullarray[$x][6]);
-				$temp2 = $temp2 + str_replace(',', '', $fullarray[$x][7]);
-				$temp3 = $temp3 + str_replace(',', '', $fullarray[$x][8]);
-				$temp4 = $temp4 + str_replace(',', '', $fullarray[$x][9]);
-			}
-			$y++;
+			$position = $col["pos"];
+			//$temp .=  "<td>$content</td>";
+			$temp .=  "<td>".$content_array[$r]."</td>";
+			//$c++;
 		}
-		$x++;
+		$temp .=  "</tr>";
+		$r++;
 	}
-	$temp[0]=$temp1;
-	$temp[1]=$temp2;
-	$temp[2]=$temp3;
-	$temp[3]=$temp4;
-	return $temp[$arrayselected];
+	$temp .=  "</table>";
+	//echo $temp;
+	return $content_array;
 }
+
+function searchword($fullarray,$findthis)
+{
+	$r=0;$c=0;
+	$temp = "";
+	
+	$temp .= "<table class='CSSTableGenerator'>";
+	foreach ($fullarray as $row) 
+	{
+		$temp .=  "<tr>";
+		foreach ($row as $col) 
+		{
+			$content = strtoupper($col["col"]);
+			$content = str_replace(array(" ", " "), "", $content);
+			
+			$position = $col["pos"];
+			$temp .=  "<td>($position)$content</td>";
+			if($content == "JAN")
+			{
+				break 2;
+			}
+		}
+		$temp .=  "</tr>";
+	}
+	$temp .=  "</table>";
+	//echo $temp;
+	return $position;
+}
+
 ?>
 </div>
 </html>
