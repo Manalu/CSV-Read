@@ -27,45 +27,43 @@ if (isset($_POST['submit']))
 
 //$myarray = read1("upload/temp.csv");
 $myarray = readcsv("upload/temp.csv");
-$january= read_array($myarray,2,3);
 $material = read_array($myarray,2,2);
 $sector = read_array($myarray,2,0);
 
-for ($i=0; $i < 12 ; $i++) 
+for ($i=0; $i <= 12 ; $i++) 
 { 
 	$month[$i] = read_array($myarray,2,3+$i);
 }
-echo $month[0];
-//echo implode(",", $january);
-//echo $sector[0];
-//echo searchword($myarray,$findthis);
-//echo implode("|", $myarray);
+
 $temp .= "<table class='CSSTableGenerator'>";
-for ($i=0; $i < count($january); $i++) 
+for ($i=0; $i < count($month[0]); $i++) 
 {
 	$data[0] = $sector[$i];
 	$data[1] = $material[$i];
-	//$data[2] = $january[$i];
 	
-	for ($x=0; $x <= count($month); $x++) 
-	{ 
-		$data[$x+2]=$month[$x][$i];
+	
+	for ($x=0; $x < count($month); $x++) 
+	{
+		if($month[0][$i]!="1STHALF") /* check first row value, this avoid error */
+		{
+			$data[$x+2]=$month[$x][$i]; /* write data to the right (sector,material,1,2,3,4-12) */
+		}
 	}
 	
-	//if($data1!="SUBTOTAL")
+	if($data[1]!="SUBTOTAL")
 	{
 	$temp .=  "<tr>";
-	foreach ($data as $value) 
+	foreach ($data as $value)
 	{
-		$temp .=  "<td>$value</td>";
+		$temp .=  "<td>$value</td>"; /* extract data in horizontal format */
+		$content[$i][] = $value;
 	}
-	//$temp .=  "<td>$data3</td><td>$data1</td><td>$data2</td>";
 	$temp .=  "</tr>";
 	}
 }
 $temp .=  "</table>";
 echo $temp;
-
+//echo implode(",", $content[1]);
 //header('Location: index.php');
 
 
