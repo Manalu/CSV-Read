@@ -36,7 +36,8 @@ vertical_array($myarray);
 //echo substr($year, -4);
 
 function vertical_array($myarray)
-{	
+{
+	include '../skdb/skdb.php';
 	$month[] = read_array($myarray,searchword($myarray,"JAN"));
 	$month[] = read_array($myarray,searchword($myarray,"FEB"));
 	$month[] = read_array($myarray,searchword($myarray,"MAR"));
@@ -50,9 +51,9 @@ function vertical_array($myarray)
 	$month[] = read_array($myarray,searchword($myarray,"NOV"));
 	$month[] = read_array($myarray,searchword($myarray,"DEC"));
 	
-	$material = read_array($myarray,"2,2"); /* ege: 50kg or bulk */
-	$sector = read_array($myarray,"2,0"); /* limbang or marudi */
-	//$sector = read_array($myarray,"2,0"); /* limbang or marudi */
+	$material = read_array($myarray,"2,3"); /* ege: 50kg or bulk */
+	$sector = read_array($myarray,"2,1"); /* limbang or marudi */
+	$plant = read_array($myarray,"2,0"); /* kuching & bintulu */
 	
 	$temp .= "<table class='CSSTableGenerator'>";
     
@@ -60,7 +61,8 @@ function vertical_array($myarray)
 	{
 		$sector_name="";
         $month_str = $month[$i][0];
-        $year = substr($myarray[0][0]["col"], -4);
+        $year = substr($myarray[0][1]["col"], -4);
+		$fulldate = date("Y-m",strtotime("$year-$month_str"));
         
 		$temp .=  "<tr>";
 		$temp .=  "<td>$month_str</td>"; /* get what month */
@@ -68,8 +70,10 @@ function vertical_array($myarray)
 		for ($x=0; $x < count($month[0]); $x++) 
 		{
 			$content =  $month[$i][$x+1];
+			$content=replacenull($content);
 			$material_txt =  $material[$x+1];
 			$sector_txt =  $sector[$x+1];
+			$plant_txt =  $plant[$x+1];
 			
 			if($sector_txt<>"")
 			{
@@ -77,13 +81,56 @@ function vertical_array($myarray)
 			}
 			
 			if($material_txt<>"SUBTOTAL" && $material_txt=="50KG")
-			$temp .=  "<td>$month_str $year,$material_txt,$sector_name $content ($i,$x)</td>";
-			//$temp .=  "<td>$material_txt</td>";
+			{
+				//$temp .=  "<td>$plant_txt,$fulldate,$material_txt,$sector_name $content ($i,$x)</td>";
+				//$temp .=  "<td>$content</td>";
+				//insertsql("budget_50kg");
+			}
+			
+			if($material_txt<>"SUBTOTAL"  && $sector_name<>"TOTAL" && $material_txt<>"")
+			{
+				$temp .=  "<td>$plant_txt,$fulldate,$material_txt,$sector_name $content ($i,$x)</td>";
+				insertsql($material_txt,$plant_txt,$fulldate,$content,$sector_name);
+			}
+				
+			/*
+			if($material_txt<>"SUBTOTAL" && $material_txt=="BULK")
+				insertsql("budget_bulk",$plant_txt,$fulldate,$content,$sector_name);
+			
+			if($material_txt<>"SUBTOTAL" && $material_txt=="JUMBO")
+				insertsql("budget_jumbo",$plant_txt,$fulldate,$content,$sector_name);
+			
+			if($material_txt<>"SUBTOTAL" && $material_txt=="B/TANKER")
+				insertsql("budget_tanker",$plant_txt,$fulldate,$content,$sector_name);
+			*/
 		}
 		$temp .=  "</tr>";
 	}
 	$temp .=  "</table>";
 	echo $temp;
+}
+
+function insertsql($material_txt,$plant_txt,$fulldate,$content,$sector_name)
+{
+	$table="";
+	if($material_txt=="50KG")$table="budget_50kg";
+	
+	if($material_txt=="BULK")$table="budget_bulk";
+	
+	if($material_txt=="JUMBO")$table="budget_jumbo";
+	
+	if($material_txt=="B/TANKER")$table="budget_tanker";
+	
+	if($table<>"") /* avoid sql crash when no table provided */
+	{
+		$rs = new sksql($table);
+		$rs->insertadd("id=$plant_txt-$table-$fulldate-$sector_name");
+		$rs->insertadd("plant=$plant_txt");
+		$rs->insertadd("filedate=$fulldate");
+		$rs->insertadd("total=$content");
+		$rs->insertadd("sector=$sector_name");
+		$rs->insert();
+	}
 }
 
 function aaa()
@@ -268,6 +315,14 @@ function searchword($fullarray,$findthis)
 	$temp .=  "</table>";
 	//echo $temp;
 	return $position;
+}
+
+function replacenull($target)
+{
+	$target = str_replace(array(" ",","), "", $target);
+	if($target=="")
+	$target=0;
+	return $target;
 }
 
 ?>
