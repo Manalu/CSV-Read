@@ -3,7 +3,7 @@
 <div class="CSSTableGenerator">
 <?php
 
-// Upload and Rename File
+// Upload and Rename Files
 
 if (isset($_POST['submit']))
 {
